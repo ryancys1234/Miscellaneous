@@ -33,3 +33,4 @@ void gradient(int x, int y, float w, float h, color darkbluepink, color lightblu
     }
   }
 }
+
