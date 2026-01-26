@@ -1,0 +1,29 @@
+.libPaths("~/miniconda3/envs/epi293/lib/R/library") # Note: This line prevents errors with loading dplyr.
+if (!requireNamespace("fastman", quietly = T)) devtools::install_github('adhikari-statgen-lab/fastman', build_vignettes = F)
+library(data.table); library(dplyr); library(fastman)
+options(datatable.fread.datatable = F)
+
+CWD <- "~/EPI293/"
+phenoCol <- "predictScore" # Replace this with the desired variable
+platforms <- list("AffymetrixData", "GlobalScreeningArrayData", "HumanCoreExData2", "IlluminaHumanHapData", "OmniExpressData", "OncoArrayData")
+
+for (p in platforms) {
+  filename <- paste0(CWD, "platform_", p, "/regenie/step2/hpfs_step2_chr@_", phenoCol, "_withP.regenie")
+  filename_out <- gsub("@", "all", filename)
+
+  for (chr in 1:22) {
+    filename_chr <- gsub("@", chr, filename)
+    df <- fread(filename_chr)
+    if (chr == 1) all_df <- df else all_df <- rbind(all_df, df)
+  }
+
+  fwrite(all_df, filename_out, sep = "\t", quote = F, row.names = F, na = NA, nThread = 4)
+
+  # png(paste0(CWD, "plots/", p, "_manhattan_plot.png"), width = 14, height = 5, units = "in", res = 300)
+  # fastman(all_df, chr = "CHROM", bp = "GENPOS", p = "P", col = "greys")
+  # dev.off()
+
+  # png(paste0(CWD, "plots/", p, "_qq_plot.png"), width = 5, height = 5, units = "in", res = 300)
+  # fastqq(all_df$P)
+  # dev.off()
+}

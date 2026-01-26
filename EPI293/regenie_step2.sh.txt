@@ -1,0 +1,42 @@
+#!/bin/bash
+#SBATCH -c 4
+#SBATCH -t 00-2:00
+#SBATCH -p general
+#SBATCH -o %x.%A_%a.out
+#SBATCH -e %x.%A_%a.err
+
+source ~/.bashrc
+conda activate epi293
+
+covar=${CWD}/hpfs_pheno_covar.txt
+pheno=${CWD}/hpfs_pheno_covar.txt
+phenoCol=predictScore # Replace this with the desired variable
+chr=$SLURM_ARRAY_TASK_ID
+pgen=${GENETIC}/platform_${platform}/chr${chr}_${platform_short}
+step1_prefix=${CWD}/platform_${platform}/regenie/step1/hpfs_${phenoCol}_step1
+step2_prefix=${CWD}/platform_${platform}/regenie/step2/hpfs_step2
+mkdir -p ${CWD}/platform_${platform}/regenie/step2
+
+# For binary traits, replace `--apply-rint` with `--bt --firth --approx`
+regenie \
+    --step 2 \
+    --pgen ${pgen} \
+    --phenoFile ${pheno} \
+    --covarFile ${covar} \
+    --phenoCol ${phenoCol} \
+    --apply-rint \
+    --threads 4 \
+    --covarCol ageyr,PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10 \
+    --pThresh 0.01 \
+    --bsize 1000 \
+    --pred ${step1_prefix}_pred.list \
+    --bsize 1000 \
+    --out ${step2_prefix}_chr${chr}
+
+awk '{
+    if (FNR==1) {print $0,"P"; next}
+    P=10^(-$13+0)
+    print $0,P
+}' OFS=" " ${step2_prefix}_chr${chr}_${phenoCol}.regenie > ${step2_prefix}_chr${chr}_${phenoCol}_withP.regenie
+
+rm ${step2_prefix}_chr${chr}_${phenoCol}.regenie

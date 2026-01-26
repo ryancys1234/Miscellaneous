@@ -1,0 +1,81 @@
+srun --pty -p general -t 0-6:00 --mem 8G -c 4 /bin/bash
+conda activate epi293
+
+HOME=~
+CWD=${HOME}/EPI293
+COURSE=${HOME}/165993/epi293
+GENETIC=${COURSE}/EPI293_GeneticData
+TRAIT=${COURSE}/EPI293_TraitData
+mkdir ${CWD}
+cd ${CWD}
+mkdir log_files plots
+platform_list=("AffymetrixData" "GlobalScreeningArrayData" "HumanCoreExData2" "IlluminaHumanHapData" "OmniExpressData" "OncoArrayData")
+platform_short_list=("Affy" "GSAD" "Core" "Illu" "Omni" "Onco")
+
+for ((i=0; i<${#platform_list[@]}; i++)); do
+    platform=${platform_list[$i]}
+    platform_short=${platform_short_list[$i]}
+
+    sbatch \
+        -J regenie_step1_${platform} \
+        --chdir ${CWD}/log_files \
+        --mem=8G \
+        -c 4 \
+        -t 00-1:30 \
+        --export=ALL,CWD=${CWD},GENETIC=${GENETIC},TRAIT=${TRAIT},platform=${platform},platform_short=${platform_short} \
+        ${CWD}/scripts/regenie_step1.sh
+done
+
+for ((i=0; i<${#platform_list[@]}; i++)); do
+    platform=${platform_list[$i]}
+    platform_short=${platform_short_list[$i]}
+
+    sbatch \
+        -J regenie_step2_${platform} \
+        --chdir ${CWD}/log_files \
+        --mem=10G \
+        -c 4 \
+        --array=1-22 \
+        -t 00-2:30 \
+        --export=ALL,CWD=${CWD},GENETIC=${GENETIC},TRAIT=${TRAIT},platform=${platform},platform_short=${platform_short} \
+        ${CWD}/scripts/regenie_step2.sh
+done
+
+Rscript scripts/combine_regenie.R
+
+cat > ${CWD}/scripts/metal_script.txt << EOF
+SCHEME STDERR
+CUSTOMVARIABLE TotalSampleSize
+TRACKPOSITIONS ON
+LABEL TotalSampleSize as N
+USESTRAND OFF
+GENOMICCONTROL ON
+AVERAGEFREQ ON
+MINMAXFREQ ON
+COLUMNCOUNTING STRICT
+
+MARKER ID
+CHROMOSOMELABEL CHROM
+POSITIONLABEL GENPOS
+ALLELE ALLELE1 ALLELE0
+FREQ A1FREQ
+EFFECT BETA
+STDERR SE
+PVALUE P
+
+# Replace the word between chrall and withP manually
+PROCESS ${CWD}/platform_AffymetrixData/regenie/step2/hpfs_step2_chrall_predictScore_withP.regenie
+PROCESS ${CWD}/platform_GlobalScreeningArrayData/regenie/step2/hpfs_step2_chrall_predictScore_withP.regenie
+PROCESS ${CWD}/platform_HumanCoreExData2/regenie/step2/hpfs_step2_chrall_predictScore_withP.regenie
+PROCESS ${CWD}/platform_IlluminaHumanHapData/regenie/step2/hpfs_step2_chrall_predictScore_withP.regenie
+PROCESS ${CWD}/platform_OmniExpressData/regenie/step2/hpfs_step2_chrall_predictScore_withP.regenie
+PROCESS ${CWD}/platform_OncoArrayData/regenie/step2/hpfs_step2_chrall_predictScore_withP.regenie
+
+OUTFILE meta_analysis_chrall_predictScore_results .txt
+ANALYZE HETEROGENEITY
+QUIT
+EOF
+
+${COURSE}/Lab3/METAL/build/bin/metal ${CWD}/scripts/metal_script.txt
+
+Rscript scripts/summary.R
