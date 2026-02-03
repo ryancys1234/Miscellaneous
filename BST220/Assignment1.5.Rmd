@@ -144,7 +144,7 @@ No, since in part A ii), the equal variance t-test did not find a statistically 
 
 ### i)
 
-For biological sex $=$ male, the fitted model equation is $\hat Y_i=3.039+0.091X_i-0.0007X_i^2$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $X_i^2$ is the squared age of the $i$-th subject in squared years. For biological sex $=$ female, the fitted model equation is $\hat Y_i=3.134+0.091X_i-0.0007X_i^2$ for $i$, $\hat Y_i$, $X_i$, and $X_i^2$ defined similarly.
+For males, the fitted model equation is $\hat Y_i=3.039+0.091X_i-0.0007X_i^2$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $X_i^2$ is the squared age of the $i$-th subject in squared years. For females, the fitted model equation is $\hat Y_i=3.134+0.091X_i-0.0007X_i^2$ for $i$, $\hat Y_i$, $X_i$, and $X_i^2$ defined similarly.
 
 ### ii)
 
@@ -190,7 +190,7 @@ summary(fit_2d)
 
 ### ii)
 
-For biological sex $=$ male, the fitted model equation is $\hat Y_i=2.788+0.114X_i-0.001X_i^2$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $X_i^2$ is the squared age of the $i$-th subject in squared years. For biological sex $=$ female, the fitted model equation is $\hat Y_i=3.863-0.039X_i+(1.72\cdot 10^{-5})X_i^2$ for $i$, $\hat Y_i$, $X_i$, and $X_i^2$ defined similarly.
+For males, the fitted model equation is $\hat Y_i=2.788+0.114X_i-0.001X_i^2$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $X_i^2$ is the squared age of the $i$-th subject in squared years. For females, the fitted model equation is $\hat Y_i=3.863-0.039X_i+(1.72\cdot 10^{-5})X_i^2$ for $i$, $\hat Y_i$, $X_i$, and $X_i^2$ defined similarly.
 
 ### iii)
 
@@ -240,7 +240,7 @@ df |> ggplot(aes(age, tc, color = factor(gender))) + geom_point() +
 
 ### iii)
 
-Both approaches yield the same fitted coefficients and scatterplots. In the first approach in part D, all the coefficients are contained in one model output, meaning the fitted values for either biological sex can be computed by looking at just that output. In the second approach in part F, the coefficients are contained in two separate model outputs, meaning the fitted values for biological sex $=$ female must be computed by looking at both outputs.
+Both approaches yield the same fitted coefficients and scatterplots. In the first approach in part D, all the coefficients are contained in one model output, meaning the fitted values for either biological sex can be computed by looking at just that output. In the second approach in part F, the coefficients are contained in two separate model outputs, meaning the fitted values for females must be computed by looking at both outputs.
 
 Another difference is that the model metrics (e.g., $R^2$, $R_{adj}^2$, F-statistic and its p-value) are calculated separately for each biological sex in the second approach but together in the first approach. In short, an advantage of the first approach is that it is compact and shows all coefficients in one model output, but with the disadvantage of losing information about the model metrics for each biological sex.
 
@@ -405,4 +405,5 @@ AIC(fit_3d)
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
+
 
