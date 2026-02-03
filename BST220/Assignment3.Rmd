@@ -7,7 +7,7 @@ geometry: margin=1.5cm
 knitr::opts_chunk$set(comment = ">", echo = F, fig.align = "center", message = F, out.width = "60%", warning = F)
 library(gam); library(ggplot2); library(splines2); theme_set(theme_minimal())
 
-df <- read.csv("dataset_1.csv")
+df <- read.csv("dataset1.csv")
 df$bmi_cts <- df$weight / (df$height / 100)^2
 df <- df[order(df$age),]
 ```
@@ -246,3 +246,4 @@ The log transformation is perhaps the most common.
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
+
