@@ -7,7 +7,7 @@ geometry: margin=1.5cm
 knitr::opts_chunk$set(comment = ">", echo = F, fig.align = "center", message = F, out.width = "60%", warning = F)
 library(ggplot2); theme_set(theme_minimal())
 
-df <- read.csv("dataset_1.csv")
+df <- read.csv("dataset1.csv")
 ```
 
 # Question 1
@@ -405,3 +405,4 @@ AIC(fit_3d)
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
+
