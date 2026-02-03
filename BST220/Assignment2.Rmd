@@ -348,5 +348,3 @@ summary(lm(tc ~ age + I(age^2) + as.factor(gender) + bmi_cts, data = new_df))
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
-
-
