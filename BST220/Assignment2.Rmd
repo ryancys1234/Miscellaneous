@@ -61,12 +61,12 @@ The non-fitted model equation is $Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\beta_
 - $X_{4i}$ is the continuous BMI of the $i$-th subject in kg/m$^2$
 - $X_{3i*4i}$ is the interaction term between continuous BMI and biological sex
 - $e_i$ is the error term for the $i$-th observation
-<!-- - $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and $X_4$ is 0 kg/m$^2$ -->
-<!-- - $\beta_1$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant -->
-<!-- - $\beta_2$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant -->
-<!-- - $\beta_3$ is the expected change in $Y$ when the subject is female compared to male, holding all other covariates constant -->
-<!-- - $\beta_4$ is the expected change in $Y$ for a 1 kg/m$^2$ increase in $X_4$, holding all other covariates constant -->
-<!-- - $\beta_5$ is the expected change in $Y$ for a 1 kg/m$^2$ increase in $X_4$ when the subject is female, holding all other covariates constant. -->
+- $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and $X_4$ is 0 kg/m$^2$
+- $\beta_1$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant
+- $\beta_2$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant
+- $\beta_3$ is the expected change in $Y$ when the subject is female compared to male, holding all other covariates constant
+- $\beta_4$ is the expected change in $Y$ for a 1 kg/m$^2$ increase in $X_4$, holding all other covariates constant
+- $\beta_5$ is the expected change in $Y$ for a 1 kg/m$^2$ increase in $X_4$ when the subject is female, holding all other covariates constant.
 
 ### iv)
 
@@ -86,12 +86,12 @@ The new model equation would be $Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\beta_3
 - $I_{4i}$ is the indicator function for the BMI category underweight
 - $I_{5i}$ is the indicator function for the BMI category overweight
 - $I_{6i}$ is the indicator function for the BMI category obese
-<!-- - $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and the patient's BMI is in the normal weight category -->
-<!-- - $\beta_1$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant -->
-<!-- - $\beta_2$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant -->
-<!-- - $\beta_3$ is the expected change in $Y$ when the subject is female compared to male and her BMI is in the normal weight category, holding all other covariates constant -->
-<!-- - $\beta_4+\beta_0$, $\beta_5+\beta_0$, and $\beta_6+\beta_0$ are the intercepts corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and the patient's BMI is in the underweight, overweight, and obese categories respectively, holding all other covariates constant -->
-<!-- - $\beta_7+\beta_3$, $\beta_8+\beta_3$, and $\beta_9+\beta_3$ are the expected changes in $Y$ when the patient is female and her BMI is in the underweight, overweight, and obese categories respectively, holding all other covariates constant. -->
+- $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and the patient's BMI is in the normal weight category
+- $\beta_1$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant
+- $\beta_2$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant
+- $\beta_3$ is the expected change in $Y$ when the subject is female compared to male and her BMI is in the normal weight category, holding all other covariates constant
+- $\beta_4+\beta_0$, $\beta_5+\beta_0$, and $\beta_6+\beta_0$ are the intercepts corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and the patient's BMI is in the underweight, overweight, and obese categories respectively, holding all other covariates constant
+- $\beta_7+\beta_3$, $\beta_8+\beta_3$, and $\beta_9+\beta_3$ are the expected changes in $Y$ when the patient is female and her BMI is in the underweight, overweight, and obese categories respectively, holding all other covariates constant.
 
 The terms in this model that need to be statistically significant are $\beta_7X_{3i}I_{4i}$, $\beta_8X_{3i}I_{5i}$, and $\beta_9X_{3i}I_{6i}$, which are the interactions between the variable for sex and the indicator variables for the BMI categories of underweight, overweight, and obese respectively.
 
@@ -348,4 +348,5 @@ summary(lm(tc ~ age + I(age^2) + as.factor(gender) + bmi_cts, data = new_df))
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
+
 
