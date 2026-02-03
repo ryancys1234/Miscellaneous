@@ -405,5 +405,3 @@ AIC(fit_3d)
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
-
-
