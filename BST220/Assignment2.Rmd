@@ -1,0 +1,350 @@
+---
+output: pdf_document
+geometry: margin=1.5cm
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(comment = ">", echo = F, fig.align = "center", message = F, out.width = "60%", warning = F)
+library(ggplot2); theme_set(theme_minimal())
+
+df <- read.csv("SCCS2_v12.csv")
+df$bmi_cts <- df$weight / (df$height / 100)^2
+df$bmi_cat <- cut(df$bmi_cts, breaks = c(-Inf, 18.5, 25.0, 30.0, Inf), labels = c("Underweight", "Normal weight", "Overweight", "Obese"), right = F)
+df$bmi_cat <- relevel(df$bmi_cat, ref = "Normal weight")
+```
+
+# Question 1
+
+## Part A
+
+### i)
+
+No, continuous BMI does not confound the effect of sex in the relationship with total cholesterol. It does not meet the classical definition of confounding since continuous BMI is a risk factor for total cholesterol and a consequence of sex.
+
+### ii)
+
+No, sex does not confound the effect of continuous BMI in the relationship with total cholesterol. It meets the classical definition of confounding since sex is a risk factor for total cholesterol, is associated with continuous BMI, and is not a consequence of continuous BMI. However, it does not meet the operational definition of confounding: the estimated slope for continuous BMI is 0.0299 and 0.0305 in the models with and without sex added respectively, so the change in the estimate is $2.16\%$ as shown below, which is smaller than the threshold of $10\%$.
+
+```{r}
+fit_1a_1 <- lm(tc ~ bmi_cts + age + I(age^2), data = df)
+fit_1a_2 <- lm(tc ~ bmi_cts + age + I(age^2) + gender, data = df)
+coef_1 <- summary(fit_1a_1)$coef[2, 1]
+coef_2 <- summary(fit_1a_2)$coef[2, 1]
+cat("Estimated coefficient for the crude analysis:", coef_1, "\n")
+cat("Estimated coefficient for the adjusted analysis:", coef_2, "\n")
+cat("Change in estimated coefficient:", (coef_1 - coef_2) / coef_2 * 100, "%")
+```
+
+## Part B
+
+### i)
+
+No, continuous BMI does not modify the effect of sex in the relationship with total cholesterol, since the interaction term between continuous BMI and sex has a p-value of 0.52, which is not significant at the $\alpha=0.05$ level (shown in the output below). My interpretation is that the relationship between sex and total cholesterol does not vary by the value of continuous BMI.
+
+```{r}
+summary(lm(tc ~ age + I(age^2) + gender + bmi_cts + gender:bmi_cts, data = df))
+```
+
+### ii)
+
+No, since effect modification works in both directions, and the previous part indicated that continuous BMI does not modify the effect of sex in the relationship with total cholesterol. My interpretation is that the relationship between continuous BMI and total cholesterol does not vary by sex.
+
+### iii)
+
+The non-fitted model equation is $Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\beta_3X_{3i}+\beta_4X_{4i}+\beta_5X_{3i*4i}+e_i$, where:
+
+- $i=1,\dots,527$
+- $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L
+- $X_{1i}$ is the age of the $i$-th subject in years
+- $X_{2i}$ is the squared age of the $i$-th subject in squared years
+- $X_{3i}$ is the biological sex of the $i$-th subject (0 if male and 1 if female)
+- $X_{4i}$ is the continuous BMI of the $i$-th subject in kg/m$^2$
+- $X_{3i*4i}$ is the interaction term between continuous BMI and biological sex
+- $e_i$ is the error term for the $i$-th observation
+<!-- - $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and $X_4$ is 0 kg/m$^2$ -->
+<!-- - $\beta_1$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant -->
+<!-- - $\beta_2$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant -->
+<!-- - $\beta_3$ is the expected change in $Y$ when the subject is female compared to male, holding all other covariates constant -->
+<!-- - $\beta_4$ is the expected change in $Y$ for a 1 kg/m$^2$ increase in $X_4$, holding all other covariates constant -->
+<!-- - $\beta_5$ is the expected change in $Y$ for a 1 kg/m$^2$ increase in $X_4$ when the subject is female, holding all other covariates constant. -->
+
+### iv)
+
+The non-fitted equation is $Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\beta_4X_{4i}+e_i$ for males and $Y_i=(\beta_0+\beta_3)+\beta_1X_{1i}+\beta_2X_{2i}+(\beta_4+\beta_5)X_{4i}+e_i$, where $i$, $Y_i$, $X_{1i}$ to $X_{4i}$, $X_{3i*4i}$, and $e_i$ are defined in the same way as in the previous part.
+
+For males, the fitted equation is $\hat Y_i=2.45+0.079X_{1i}-0.0006X_{2i}+0.037X_{4i}$, where $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L and $i$, $X_{1i}$, $X_{3i}$, and $X_{4i}$ are defined as before, according to this data. For females, the fitted equation is $\hat Y_i=(2.45+0.38)+0.079X_{1i}-0.0006X_{2i}+(0.037-0.013)X_{4i}=2.83+0.079X_{1i}-0.0006X_{2i}+0.024X_{4i}$, where $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L and $i$, $X_{1i}$, $X_{2i}$, and $X_{4i}$ are defined the same as before, according to this data.
+
+### v)
+
+The new model equation would be $Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\beta_3X_{3i}+(\beta_4+\beta_7X_{3i})I_{4i}+(\beta_5+\beta_8X_{3i})I_{5i}+(\beta_6+\beta_9X_{3i})I_{6i}+e_i$, where:
+
+- $i=1,\dots,527$
+- $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L
+- $X_{1i}$ is the age of the $i$-th subject in years
+- $X_{2i}$ is the squared age of the $i$-th subject in squared years
+- $X_{3i}$ is the biological sex of the $i$-th subject (0 if male and 1 if female)
+- $I_{4i}$ is the indicator function for the BMI category underweight
+- $I_{5i}$ is the indicator function for the BMI category overweight
+- $I_{6i}$ is the indicator function for the BMI category obese
+<!-- - $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and the patient's BMI is in the normal weight category -->
+<!-- - $\beta_1$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant -->
+<!-- - $\beta_2$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant -->
+<!-- - $\beta_3$ is the expected change in $Y$ when the subject is female compared to male and her BMI is in the normal weight category, holding all other covariates constant -->
+<!-- - $\beta_4+\beta_0$, $\beta_5+\beta_0$, and $\beta_6+\beta_0$ are the intercepts corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years, the subject is male, and the patient's BMI is in the underweight, overweight, and obese categories respectively, holding all other covariates constant -->
+<!-- - $\beta_7+\beta_3$, $\beta_8+\beta_3$, and $\beta_9+\beta_3$ are the expected changes in $Y$ when the patient is female and her BMI is in the underweight, overweight, and obese categories respectively, holding all other covariates constant. -->
+
+The terms in this model that need to be statistically significant are $\beta_7X_{3i}I_{4i}$, $\beta_8X_{3i}I_{5i}$, and $\beta_9X_{3i}I_{6i}$, which are the interactions between the variable for sex and the indicator variables for the BMI categories of underweight, overweight, and obese respectively.
+
+# Question 2
+
+## Part A
+
+```{r}
+fit_2a <- lm(tc ~ age + I(age^2) + as.factor(gender) + bmi_cts, data = df)
+```
+
+The total cholesterol value is 5.84 mmol/L or 225.8 mg/dL for a 30 year old male with BMI 30 kg/m$^2$.
+
+## Part B
+
+The R language provides functions for both standardized and studentized residuals; specific details can be found at https://stat.ethz.ch/R-manual/R-devel/library/stats/html/influence.measures.html. The function `rstandard()` uses the formula $z_i=\dfrac{e_i}{\sqrt{SSE/(n-(p+1)) to re-normalize the residuals to have unit variance. The function `rstudent()` calculates externally studentized residuals using the formula $r_{(i)}=\dfrac{e_i}{\sqrt{MSE_{(i)}(1-h_{ii}), or what the documentation calls a "leave-one-out measure of the error variance".
+
+## Part C
+
+### iii)
+
+```{r}
+raw_res <- df$tc - fit_2a$fitted.values
+std_res <- rstandard(fit_2a)
+stu_res <- rstudent(fit_2a)
+ggplot(df, aes(raw_res, std_res)) + geom_point() +
+  labs(title = "Raw vs standardized residuals",
+       x = "Raw residuals", y = "Standardized residuals")
+ggplot(df, aes(raw_res, stu_res)) + geom_point() +
+  labs(title = "Raw vs externally studentized residuals",
+       x = "Raw residuals", y = "Externally studentized residuals")
+ggplot(df, aes(std_res, stu_res)) + geom_point() +
+  labs(title = "Standardized vs externally studentized residuals",
+       x = "Standardized residuals", y = "Externally studentized residuals")
+```
+
+### iv)
+
+I find that the correlations for all three comparisons to be very close to 1. I interpret this as showing that the adjustments to the raw residuals in the standardized and studentized formulas are more or less constant for each data point in this SCCS2 example. This means that using any of the three measures would yield similar results, and determining which residual to use would not have a large impact.
+
+```{r}
+cat("Correlation for raw vs standardized residuals:", cor(raw_res, std_res, method = "pearson"), "\n")
+cat("Correlation for raw vs externally studentized residuals:", cor(raw_res, stu_res, method = "pearson"), "\n")
+cat("Correlation for standardized vs externally studentized residuals:", cor(std_res, stu_res, method = "pearson"))
+```
+
+## Part D
+
+### i)
+
+I find that the mean of the raw residuals is extremely close to zero. Thus, the claim is true in this example.
+
+```{r}
+cat("Mean of raw residuals:", mean(raw_res))
+```
+
+### ii)
+
+I find that both the standardized and the externally studentized residuals have means that are very close to zero. Thus, they can be said to have mean zero.
+
+```{r}
+cat("Mean of standardized residuals:", mean(std_res), "\n")
+cat("Mean of externally studentized residuals:", mean(stu_res))
+```
+
+## Part E
+
+Using the externally studentized residuals, the histogram and QQ plot below show that the normality assumption generally appears to hold for these data, despite the histogram being slightly assymmetrical and the QQ plot having a departure from the diagonal line on the right end.
+
+```{r}
+data.frame(stu_res = stu_res) |> ggplot(aes(stu_res)) + geom_histogram() +
+  labs(title = "Histogram of studentized residuals",
+       x = "Studentized residuals", y = "Count")
+qqnorm(stu_res); qqline(stu_res, col = "blue")
+```
+
+## Part F
+
+### i)
+
+```{r}
+tbl_2f1 <- df[abs(stu_res) > 2, c("age", "gender", "bmi_cts", "tc")]
+tbl_2f1$stu_res <- stu_res[abs(stu_res) > 2]
+colnames(tbl_2f1) <- c("Age", "Sex", "Continuous BMI", "Total cholesterol", "Studentized residuals")
+tbl_2f1
+```
+
+### ii)
+
+```{r}
+tbl_2f2 <- df[abs(stu_res) > 3, c("age", "gender", "bmi_cts", "tc")]
+tbl_2f2$stu_res <- stu_res[abs(stu_res) > 3]
+colnames(tbl_2f2) <- c("Age", "Sex", "Continuous BMI", "Total cholesterol", "Studentized residuals")
+tbl_2f2
+```
+
+### iii)
+
+These data points stick out as outliers because they have the largest total cholesterol values in the dataset. Their total cholesterol values are above 9 mmol/L, while the mean total cholesterol value in the dataset is 5.52 mmol/L.
+
+### iv)
+
+These data points exhibit high outlying-ness due to their high total cholesterol values as discussed above. However, they do not exhibit high leverage since their hat values are below the threshold of $\frac{2(p+1)}{n}=\frac{2(5)}{527}=0.019$.
+
+```{r}
+hv <- hatvalues(fit_2a)
+cat("Hat values for the outliers:", hv[rownames(tbl_2f2) |> as.integer()], "\n")
+cat("Threshold for high leverage:", 2*5/527)
+```
+
+# Question 3
+
+## Part A
+
+### ii)
+
+Indeed, the hat values in this example are all positive and their average is equal to $\frac{p+1}{n}=\frac{5}{527}=0.0095$.
+
+```{r}
+cat("Number of non-positive hat values:", sum(hv <= 0), "\n")
+cat("Average of hat values:", mean(hv))
+```
+
+## Part B
+
+### i)
+
+```{r}
+data.frame(h = hv) |> ggplot(aes(h)) + geom_histogram() +
+  labs(title = "Histogram of the hat values", x = "Hat values", y = "Count")
+```
+
+### ii)
+
+```{r}
+tbl_3b1 <- df[hv > 2*5/527, c("age", "gender", "bmi_cts", "tc")]
+tbl_3b1$h <- hv[hv > 2*5/527]
+colnames(tbl_3b1) <- c("Age", "Sex", "Continuous BMI", "Total cholesterol", "Hat value")
+tbl_3b1
+```
+
+### iii)
+
+```{r}
+tbl_3b2 <- df[hv > 4*5/527, c("age", "gender", "bmi_cts", "tc")]
+tbl_3b2$h <- hv[hv > 4*5/527]
+colnames(tbl_3b2) <- c("Age", "Sex", "Continuous BMI", "Total cholesterol", "Hat value")
+tbl_3b2
+```
+
+### iv)
+
+These data points stick out as having high leverage because observations 163 and 242 have the two largest age values in the dataset, while observation 475 has the largest continuous BMI value in the dataset. Since leverage measures how much a covariate(s) deviate from their means, the fact that these points have high leverages makes sense.
+
+### v)
+
+Leverage is driven by values of a covariate(s). This is because the hat matrix is calculated without using the outcomes.
+
+# Question 4
+
+## Part A
+
+### ii)
+
+This is true in this example; all Cook's distances are positive here.
+
+```{r}
+cd <- cooks.distance(fit_2a)
+cat("Number of non-positive Cook's distances:", sum(cd <= 0))
+```
+
+### iii)
+
+```{r}
+data.frame(cd = cd) |> ggplot(aes(cd)) + geom_histogram() +
+  labs(title = "Histogram of the Cook's distances",
+       x = "Cook's distances", y = "Count")
+```
+
+## Part B
+
+### i)
+
+```{r}
+tbl_4bi <- df[cd > 4/527, c("age", "gender", "bmi_cts", "tc")]
+tbl_4bi$r <- stu_res[cd > 4/527]
+tbl_4bi$h <- hv[cd > 4/527]
+tbl_4bi$c <- cd[cd > 4/527]
+colnames(tbl_4bi) <- c("Age", "Sex", "BMI", "Total chol.", "Residuals", "Hat value", "Cook's distance")
+tbl_4bi
+```
+
+### ii)
+
+```{r}
+tbl_4bii <- df[cd > 12/527, c("age", "gender", "bmi_cts", "tc")]
+tbl_4bii$r <- stu_res[cd > 12/527]
+tbl_4bii$h <- hv[cd > 12/527]
+tbl_4bii$c <- cd[cd > 12/527]
+colnames(tbl_4bii) <- c("Age", "Sex", "Continuous BMI", "Total cholesterol", "Studentized residuals", "Hat value", "Cook's distance")
+tbl_4bii
+```
+
+### iii)
+
+Observation 103 has the maximum total cholesterol value in the dataset, contributing to a high Studentized residual value and thus a high Cook's distance. Observation 514 has a relatively high age value (dataset mean is 43.5 years) and high total cholesterol value (dataset mean is 24.2 mmol/L), contributing to a Studentized residual value and a high hat value respectively, which in turn contribute to a high Cook's distance.
+
+## Part C
+
+### i)
+
+I choose DFFITS as the measure of influence.
+
+## Part C
+
+### ii)
+
+The threshold $|\text{DFFITS}_i|>2\sqrt{\frac{p+1}{n}}=2\sqrt{\frac{5}{527 is chosen for $i=1,\dots,527$.
+
+```{r}
+ind <- abs(dffits(fit_2a)) > 2*sqrt(5/527)
+tbl_4cii <- df[ind, c("age", "gender", "bmi_cts", "tc")]
+tbl_4cii$d <- dffits(fit_2a)[ind]
+colnames(tbl_4cii) <- c("Age", "Sex", "Continuous BMI", "Total cholesterol", "DFFITS value")
+tbl_4cii
+```
+
+# Question 5
+
+## Part A
+
+The observations satisfying one of the three mentioned criteria are shown below. I observe that two observations (103 and 514) have both very large Studentized residual absolute values and very large Cook's distances. Interestingly, there are no observations that have both very large hat values and very large Cook's distance.
+
+```{r}
+cat("Observation IDs with the absolute value of the Studentized residuals > 3:", rownames(tbl_2f2), "\n")
+cat("Observation IDs with hat value > 4(p+1)/n:", rownames(tbl_3b2), "\n")
+cat("Observation IDs with Cook's distance > 12/n:", rownames(tbl_4bii))
+```
+
+## Part B
+
+My overall findings have not changed much. The new model has a slightly lower $R_{adj}^2$ (0.1595 vs 0.1597), a slightly lower residual standard error (0.9221 vs 0.9622), and slightly different coefficient estimates and p-values (e.g., 2.72 vs 2.62 for the intercept, which is a $3\%$ relative change). In my opinion, the models' results are not significantly different.
+
+```{r}
+ind <- c(rownames(tbl_2f2), rownames(tbl_3b2), rownames(tbl_4bii)) |> as.integer() |> unique()
+new_df <- df[-ind,]
+print("Model run on all observations:")
+summary(fit_2a)
+print("Model run after eliminating the observations in question:")
+summary(lm(tc ~ age + I(age^2) + as.factor(gender) + bmi_cts, data = new_df))
+```
+
+# Appendix
+
+```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
+```

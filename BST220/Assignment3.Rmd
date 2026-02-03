@@ -1,0 +1,248 @@
+---
+output: pdf_document
+geometry: margin=1.5cm
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(comment = ">", echo = F, fig.align = "center", message = F, out.width = "60%", warning = F)
+library(gam); library(ggplot2); library(splines2); theme_set(theme_minimal())
+
+df <- read.csv("SCCS2_v12.csv")
+df$bmi_cts <- df$weight / (df$height / 100)^2
+df <- df[order(df$age),]
+```
+
+# Question 1
+
+## Part A
+
+### i)
+
+$Y_i=\beta_0+\beta_1X_i+e_i$ where $i=1,\dots,527$, $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L, and $X_i$ is the age of the $i$-th subject in years.
+
+### ii)
+
+$Y_i=\beta_0+\beta_1X_i+\beta_2X_i^2$ where $i=1,\dots,527$, $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L, and $X_i$ is the age of the $i$-th subject in years.
+
+### iii)
+
+$Y_i=\beta_0+\beta_1X_i+\beta_2X_i^2+\beta_3X_i^3+\beta_4(X_i-30)_+^3+\beta_5(X_i-60)_+^3+e_i$, where $i=1,\dots,527$, $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L, and $X_i$ is the age of the $i$-th subject in years.
+
+### iv)
+
+$Y_i=\beta_0+\beta_1f_1(X_i)+e_i$, where $i=1,\dots,527$, $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $f_1$ is some nonparametric function with degrees of freedom 5.
+
+```{r}
+fit_1a1 <- lm(tc ~ age, data = df)
+fit_1a2 <- lm(tc ~ age + I(age^2), data = df)
+fit_1a3 <- lm(tc ~ bs(age, knots = c(30, 60)), data = df)
+fit_1a4 <- gam(tc ~ s(age, df = 5), data = df)
+```
+
+### vi)
+
+I fit the spline model in part iii) by using the `bs()` function with age as the predictor in `lm()` and specifying the knots as 30 and 60; I notice that `bs()` gives the same output as the `bSpline()` function here.
+
+### vii)
+
+I fit the GAM model in part iv) by using the function `s()` with age as the predictor in `gam()` and specifying the degrees of freedom as 5.
+
+### viii)
+
+The scatterplot is shown below. I observe that all four model fit curves appear quite similar overall; among these curves, the quadratic and additive model curves are the most similar to each other. The curves are visibly different for age greater than around 70 years (where there are less observations), with the cubic spline curve wiggling the most near its right edge.
+
+```{r}
+plot(df$age, df$tc, main = "Total cholesterol vs age", ylab = "Total cholesterol (mmol/L)", xlab = "Age (years)")
+lines(df$age, fitted(fit_1a1), col = 'black', lwd = 1.5)
+lines(df$age, fitted(fit_1a2), col = 'red', lwd = 1.5)
+lines(df$age, fitted(fit_1a3), col = 'blue', lwd = 1.5)
+lines(df$age, fitted(fit_1a4), col = 'orange', lwd = 1.5)
+legend(16, 10.1, c("Linear model", "Quadratic model", "Cubic spline model", "Additive model"), col = c('black', 'red', 'blue', 'orange'), lwd = 1.5, cex = 0.8)
+```
+
+### ix)
+
+All four models have statistically significant coefficients or nonparametric terms at the $\alpha=0.001$ level. As model complexity increases from linear to having a cubic spline, $R_{adj}^2$ increases, with the cubic spline model having the largest $R_{adj}^2$ of $0.149$. ($R_{adj}^2$ was not calculated for the GAMs.) As model complexity increases from linear to the GAM, the AIC generally decreases, with the GAM having the lowest AIC of 1466.7 and the quadratic model having the second lowest AIC of 1467.7.
+
+```{r}
+anova(fit_1a1)[5]
+anova(fit_1a2)[5]
+anova(fit_1a3)[5]
+anova(fit_1a4)[3]
+cat(summary(fit_1a1)$adj.r.squared, summary(fit_1a2)$adj.r.squared, summary(fit_1a3)$adj.r.squared, "\n")
+cat(AIC(fit_1a1), AIC(fit_1a2), AIC(fit_1a3), AIC(fit_1a4))
+```
+
+### x)
+
+I consider the quadratic model (with linear and quadratic age) as the best. Its adjusted R squared is the second highest and its AIC is the second lowest among all the models, indicating it fits the data relatively well. It is also less complex compared to the cubic spline model, which can be overly wiggly as seen in the scatterplot, and the GAM, which has a nonparametric term. As such, it is relatively easy to interpret in addition to being sufficiently complex for the data.
+
+## Part B
+
+### i)
+
+$Y_i=\beta_0+\beta_1X_i+\beta_2X_i^2+\beta_3X_i^3+\beta_4(X_i-40)_+^3+\beta_5(X_i-60)_+^3+e_i$, where $i=1,\dots,527$, $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L, and $X_i$ is the age of the $i$-th subject in years.
+
+### ii)
+
+$Y_i=\beta_0+\beta_1X_i+\beta_2(X_i-40)_++\beta_3(X_i-60)_++e_i$, where $i=1,\dots,527$, $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L, and $X_i$ is the age of the $i$-th subject in years.
+
+### iii)
+
+No, since $\beta_4(X_i-40)_+$ and $\beta_5(X_i-60)_+$ are in the linear spline model but not the cubic spline model.
+
+### iv)
+
+I compare Model 1, a model with a cubic spline for age with knots at 40 and 60, to Model 2, a model with both linear age and a cubic spline for age with the same knots. I notice that while the coefficient values are different between the models, all other summary values are the same. In particular, both models have the same residual standard error, degrees of freedom, $R_{adj}^2$, F-statistic and its p-value, and AIC. Importantly, the last spline coefficient in Model 2 is NA, indicating collinearity with linear age. These results suggest that Model 2 does not offer any new information compared to Model 1. Thus, I conclude that the linear age model (Model A) is nested within the cubic spline model.
+
+```{r}
+fit_1b1 <- lm(tc ~ bs(age, knots = c(40, 60)), data = df)
+fit_1b2 <- lm(tc ~ age + bs(age, knots = c(40, 60)), data = df)
+summary(fit_1b1); summary(fit_1b2)
+cat(AIC(fit_1b1), AIC(fit_1b2))
+```
+
+### v)
+
+For the equation in part i), we have $X=\begin{bmatrix} 1 & X_1 & X_1^2 & X_1^3 & (X_1-40)_+^3 & (X_1-60)_+^3 \\ \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\ 1 & X_n & X_n^2 & X_n^3 & (X_n-40)_+^3 & (X_n-60)_+^3 \end{bmatrix}$ and for the equation in part ii), we have $X=\begin{bmatrix} 1 & X_1 & (X_1-40)_+ & (X_1-60)_+ \\ \vdots & \vdots & \vdots & \vdots \\ 1 & X_n & (X_n-40)_+ & (X_n-60)_+ \end{bmatrix}$.
+
+## Part C
+
+I now compare Model 3, a model with a cubic spline for age with knots at 40 and 60, to Model 4, a model with linear age, quadratic age, and a cubic spline for age with the same knots. Similar to in part B iv) above, I notice that while the coefficient values are different between the models, all other summary values are the same. Importantly, the last spline coefficient in Model 4 is NA, indicating collinearity with linear age. These results suggest that Model 4 does not offer any new information compared to Model 3. Thus, I conclude that the linear and quadratic age model (Model B) is nested within the cubic spline model.
+
+```{r}
+fit_1c <- lm(tc ~ age + I(age^2) + bs(age, knots = c(40, 60)), data = df)
+summary(fit_1b1); summary(fit_1c)
+cat(AIC(fit_1b1), AIC(fit_1c))
+```
+
+## Part D
+
+### iii)
+
+The null hypothesis is $H_0:\beta_3=\beta_4=\beta_5=0$, where $\beta_3$, $\beta_4$, and $\beta_5$, defined in part B i) for the cubic spline model, are the coefficients for cubic age and the basis functions. The alternative hypothesis is $H_1:$ at least one of $\beta_3,\beta_4,\beta_5\neq 0$.
+
+### iv)
+
+$F=\frac{SSE_{reduced}-SSE_{full}}{(p+1)_{full}-(p+1)_{reduced}}/\frac{SSE_{full}}{n-(p+1)_{full}}=\frac{492.3464-489.6436}{6-3}/\frac{489.6436}{527-6}=0.9586\sim F_{3,521}$, which gives a p-value of $0.412>0.05$.
+
+```{r}
+cat("F-test p-value using pf():", pf(0.95862841, 3, 521, lower.tail = F))
+```
+
+### v)
+
+Since the F-test p-value is not significant at the $\alpha=0.05$ level, I conclude that the model with linear and quadratic age (Model B) is sufficient to model the effects of age, according to this data. In other words, I fail to reject the null hypothesis that $\beta_3=\beta_4=\beta_5=0$ in the cubic spline model.
+
+This is consistent with my findings in part A ix), where a spline model does not significantly improve on Model B.
+
+```{r}
+fit_1d1 <- lm(tc ~ age + I(age^2), data = df)
+anova(fit_1d1, fit_1b1)
+```
+
+# Question 2
+
+## Part A
+
+### i)
+
+I recommend the model $\hat Y_i=3.748+0.0310X_{1i}+0.0235f_1(X_{2i})$, where $i=1,\dots,527$, $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L, $X_{1i}$ is the BMI of the $i$-th subject in mmol/L, $X_{2i}$ is the age of the $i$-th subject in years, and $f_1$ is some nonparametric function with degrees of freedom 3. All estimated coefficients are statistically significant at the $\alpha=0.001$ level.
+
+```{r}
+fit_21 <- lm(tc ~ bmi_cts, data = df)
+fit_22 <- lm(tc ~ bmi_cts + age, data = df)
+fit_23 <- lm(tc ~ bmi_cts + gender, data = df)
+fit_24 <- lm(tc ~ bmi_cts + age + gender + bmi_cts*gender, data = df)
+fit_25 <- lm(tc ~ bmi_cts + bs(age, df = 4), data = df)
+fit_26 <- lm(tc ~ bmi_cts + bs(age, df = 5), data = df)
+fit_27 <- lm(tc ~ bmi_cts + bs(age, df = 6), data = df)
+fit_28 <- lm(tc ~ bmi_cts + bs(age, knots = c(42)), data = df)
+fit_29 <- lm(tc ~ bmi_cts + bs(age, knots = c(32, 56)), data = df)
+fit_210 <- lm(tc ~ bmi_cts + bs(age, knots = c(32, 42, 56)), data = df)
+fit_211 <- gam(tc ~ bmi_cts + s(age, df = 3), data = df)
+fit_212 <- gam(tc ~ bmi_cts + s(age, df = 4), data = df)
+fit_213 <- gam(tc ~ bmi_cts + s(age, df = 5), data = df)
+fit_214 <- gam(tc ~ bmi_cts + s(age, df = 6), data = df)
+fits <- list(fit_22, fit_25, fit_26, fit_27, fit_28, fit_29, fit_210, fit_211, fit_212, fit_213, fit_214)
+lapply(fits, AIC)
+anova(fit_21, fit_211)
+summary(fit_211); fit_211$coef
+p <- predict(fit_211, se.fit = T); se <- sqrt(sum(p$se.fit^2)/(527-3))
+(0.03099215 - se*qt(0.975, 527 - 3))*38.67
+```
+
+### ii)
+
+First, I defined the base model as the model with only continuous BMI as a linear predictor (Model 1). I then investigated if age or sex is a confounder. Both age and sex satisfied the classical definition of confounding, but only age satisfied the operational definition; the analysis adjusted with age yielded a $62.66\%$ decrease in the estimated coefficient of continuous BMI.
+
+With age now as a confounder, I investigated whether sex modifies the effect of continuous BMI on total cholesterol. I found that sex was not an effect modifier since its interaction term with continuous BMI had a p-value of 0.499, which was not statistically significant at the $\alpha=0.05$ level. Thus, the updated model now only had continuous BMI and age as linear predictors (Model 2).
+
+Next, I determined if the effects of age should be flexibly modeled. I fitted models with cubic splines on age, specifying 4 to 6 degrees of freedom or 1 to 3 knots, and GAMs with nonparametric functions for age, specifying 3 to 6 degrees of freedom. These models all had significant spline or nonparametric terms. I then compared these models to each other and to Model 2 based on their AIC values. ($R_{adj}^2$ was not calculated for the GAMs.) The GAM with continuous BMI and a nonparametric function for age with degrees of freedom 3 (Model 3) had the lowest AIC of $1459.8$, indicating that it is parsimonious and fits the data relatively well.
+
+Finally, I conducted an F-test to assess if Model 3 significantly improved Model 1, which is nested inside the former. The F-statistic p-value was $3.969\cdot10^{-14}$, which was significant at the $\alpha=0.05$ level, indicating that Model 1 was not sufficient to model the effects of continuous BMI on total cholesterol.
+
+## Part B
+
+According to this data, an increase of 1 kg/m$^2$ in body mass index is associated with an increase of 1.20 mg/dL in the predicted total cholesterol on average, with 95% CI $[-5.93, 8.32]$ and $p<0.001$, holding all other covariates constant and after adjusting for the age of an individual in years as a non-linear term.
+
+# Question 3
+
+## Part B
+
+I will first check the original data to ensure that there were no errors in the collection or entry of the data. If the outlier value is genuinely erroneous, for instance due to a typo or the fact that the observation is outside the population or scope of the study, I will attempt to correct it according to domain knowledge; if it cannot be corrected, I will remove it from the dataset. If there are broader patterns in the distribution of the residuals and/or the outliers, I will consider applying a transformation to the data or using a more complex model, such as a GLM. The more common case, though, is that the outlier can be attributed to the natural variability in the data, in which case I will keep it.
+
+At the same time, I will conduct sensitivity analyses by fitting the models with and without the outlier and observing if the model outputs change significantly. If not, I will keep the outlier in the data. If yes, I will thoroughly explain why and how I removed the outliers and I will report inferences both with and without the outlier in my write-up for the application.
+
+## Part C
+
+### i)
+
+Forming categories can help if we are unsure about whether the effect of a continuous covariate is linear or not (e.g., the pattern of the residuals suggest that the covariate and outcome are nonlinearly related). In this case, they can improve the interpretability of the model results. Moreover, forming categories can reduce excessive noise in the data.
+
+### ii)
+
+Forming categories can result in the loss of information inherent in the data, which may be vital to a useful model. Moreover, the numerical cutoffs for the categories can be arbitrary and can significantly affect the outcome of the model; they ideally must rely on domain knowledge and expertise. Finally, having too many categories can lead to overfitting.
+
+### iii)
+
+I recently categorized body mass index in the previous assignments into four categories (normal weight, underweight, overweight, and obese) based on the continuous value of the covariate in mmol/L.
+
+### iv)
+
+I used indicator functions to define each level of the categorical variable (underweight, overweight, and obese) apart from the baseline level (normal weight).
+
+<!-- I used the `cut()` function in R, which converts a numeric variable into a factor variable by partitioning the range of numeric values and assigning a category to each observation. -->
+
+## Part D
+
+### i)
+
+Polynomials can model nonlinear relationships between covariates and outcomes, in which case it would outperform a linear model and have a reduced risk of underfitting the data.
+
+### ii)
+
+Using polynomials can increase the risk of overfitting the data since the shapes of the polynomials would be sensitive to the natural variability in the data and outliers. They usually also make it harder to interpret the model results.
+
+### iii)
+
+Alternative methods include applying a transformation to the covariate(s), including splines, or using GAMs.
+
+## Part E
+
+### i)
+
+Transformations may help to improve the adherence of the data to the LINE assumptions. For instance, they can normalize the residuals when heteroskedasticity occurs, and they can normalize data from distributions that are very skewed.
+
+### ii)
+
+Transformations can complicate the interpretation of the model outputs and results (e.g., they now have to be interpreted in terms of percent change).
+
+### iii)
+
+The log transformation is perhaps the most common.
+
+# Appendix
+
+```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
+```

@@ -1,0 +1,407 @@
+---
+output: pdf_document
+geometry: margin=1.5cm
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(comment = ">", echo = F, fig.align = "center", message = F, out.width = "60%", warning = F)
+library(ggplot2); theme_set(theme_minimal())
+
+df <- read.csv("SCCS2_v12.csv")
+```
+
+# Question 1
+
+## Part A
+
+### i)
+
+The regression model equation is $Y_i=\beta_0+\beta_1 X_i+e_i$, where:
+
+- $i=1,\dots,527$
+- $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L
+- $X_i$ is the age of the $i$-th subject in years
+- $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X$ is 0 years
+- $\beta_1$ is the slope or expected change in $Y$ for a 1 year increase in $X$
+- $e_i$ is the random error with $E(e_i)=0$, $\text{Var}(e_i)=\sigma^2$, $\text{Cor}(e_i,e_j)=0$, and $e_i\sim N(0,\sigma^2)$
+- $E(Y|X)$ is the expected value of $Y$ for a given $X$.
+
+### ii)
+
+According to this data, a 10 year increase in the subject's age is associated with a 0.262 mmol/L increase in their total cholesterol on average, with a 95% confidence interval of [0.204, 0.321] and a p-value $<2\cdot 10^{-16}$.
+
+```{r}
+fit_1a <- lm(tc ~ age, data = df)
+summary(fit_1a)
+confint(fit_1a)
+```
+
+### iii)
+
+The coefficient between age and total cholesterol is 0.360.
+
+```{r}
+cat("Pearson coefficient:", cor(df$age, df$tc, method = "pearson"))
+```
+
+### iv)
+
+The simple linear regression model has a very significant p-value for the association between age and total cholesterol, which suggests that we can be confident there is a relationship between the variables. Similarly, the Pearson correlation coefficient indicates a positive correlation between the variables; however, it is somewhat low, suggesting that the strength of the linear relationship is not particularly strong. This indicates that outliers could be present or that simple linear regression might be insufficient for modeling the relationship between the variables.
+
+## Part B
+
+### ii)
+
+In the scatterplot of the residuals vs fitted values, there does not seem to be any pattern in the residuals, which appear homoscedastic. In the histogram, the residuals appear to be mostly normally distributed with a slight right skew. In the QQ plot, the residuals also look normally distributed since they mostly follow the diagonal straight line with a slight deviation on the right.
+
+### iii)
+
+In the histogram, there appears to be two outliers with residuals $>4$. This can also be seen in the scatterplot and the QQ plot, the latter of which shows the outliers as the two rightmost points.
+
+```{r}
+plot(fitted(fit_1a), residuals(fit_1a), main = "Residuals vs fitted values", xlab = "Fitted values", ylab = "Residuals"); abline(a = 0, b = 0)
+hist(residuals(fit_1a), main = "Histogram of residuals", xlab = "Residuals")
+qqnorm(residuals(fit_1a)); qqline(residuals(fit_1a))
+```
+
+## Part C
+
+### i)
+
+```{r}
+plot(df$age, df$tc, main = "Total cholesterol vs age", xlab = "Age", ylab = "Total cholesterol"); lines(lowess(df$age, df$tc), col = "red", lwd = 2)
+```
+
+### ii)
+
+```{r}
+fit_1c <- lm(tc ~ age + I(age^2), data = df)
+summary(fit_1c)
+```
+
+### iii)
+
+The fitted model equation is $\hat Y_i = 3.066+0.092X_i-0.0007X_i^2$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $X_i^2$ is the squared age of the $i$-th subject in squared years.
+
+### iv)
+
+Yes, I do see statistical evidence of a nonlinear relationship between age and total cholesterol according to this data. This is since the p-value for the coefficient of Age$_i^2$ is $0.0004<0.001$, which is statistically significant. This is consistent with the scatterplot of total cholesterol vs age, in which the Lowess curve is not a straight line.
+
+# Question 2
+
+## Part A
+
+### i)
+
+The null hypothesis or $H_0$ is $\mu_1=\mu_2$ and the alternative hypothesis r $H_1$ is $\mu_1\neq\mu_2$, where $\mu_1$ is the mean total cholesterol of the female subjects and $\mu_2$ is the mean total cholesterol of the male subjects. The t-test yields a p-value of $0.523$, which is not significant. Thus, there is insufficient evidence to conclude that the mean total cholesterol is statistically different between sexes.
+
+```{r}
+t.test(df$tc ~ df$gender, var.equal = T)
+```
+
+### ii)
+
+The results for linear model and the equal variance t-test have the following in common:
+
+- In the t-test results, the difference in the mean total cholesterol between the biological sexes is 0.0587, which is the same as the estimated slope for biological sex in the linear model.
+- The absolute value of the t statistic is 0.639 for both the t-test and the estimated slope for biological sex in the linear model. In addition, the degrees of freedom and p value corresponding to this t statistic are 525 and 0.523 respectively for both the t-test and the linear model.
+- In the t-test results, the 95% confidence interval is [-0.239, 0.122], which is the same, but with opposite signs, as the 95% confidence interval for the estimated slope for biological sex in the linear model.
+
+```{r}
+fit_2a <- lm(tc ~ gender, data = df)
+summary(fit_2a)
+confint(fit_2a)
+```
+
+## Part B
+
+### i)
+
+No, since biological sex is not associated with age. This violates one of the conditions for the classical definition of a confounder.
+
+### ii)
+
+The fitted regression model equation is $\hat Y_i=3.039+0.091X_{1i}-0.0007X_{1i}^2+0.094X_{2i}$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_{1i}$ is the age of the $i$-th subject in years, $X_{1i}^2$ is the squared age of the $i$-th subject in squared years, and $X_{2i}$ is the biological sex of the $i$-th subject.
+
+```{r}
+fit_2b <- lm(tc ~ age + I(age^2) + gender, data = df)
+summary(fit_2b)
+```
+
+### iii)
+
+The estimated slope for age is 0.091 in the model with biological sex added and 0.092 in the model without biological sex added, so the change between the estimated slope is $\frac{0.092-0.091}{0.091}\times100=1.19\%$. The estimated slope for squared age is -0.00072 in the model with biological sex added and -0.00074 in the model without biological sex added, so the change between the estimated slope is $\frac{-0.00074+0.00072}{-0.00072}\times100=2.04\%$. Thus, the estimated slopes for both age and squared age change less than $10\%$ when biological sex is added to the model, meaning that biological sex does not meet the criteria for operational confounding.
+
+### iv)
+
+Biological sex is not a confounder of the effect of linear and quadratic age on total cholesterol. This is since it does not meet either the classical nor the operational definitions of a confounder.
+
+### v)
+
+No, since in part A ii), the equal variance t-test did not find a statistically significant difference in the mean total cholesterol between the biological sexes.
+
+## Part C
+
+### i)
+
+For biological sex $=$ male, the fitted model equation is $\hat Y_i=3.039+0.091X_i-0.0007X_i^2$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $X_i^2$ is the squared age of the $i$-th subject in squared years. For biological sex $=$ female, the fitted model equation is $\hat Y_i=3.134+0.091X_i-0.0007X_i^2$ for $i$, $\hat Y_i$, $X_i$, and $X_i^2$ defined similarly.
+
+### ii)
+
+I notice that the fitted values follow a downwards parabola, which makes sense given that the models have squared age as a covariate. In addition, the difference in the fitted values between the biological sexes is small, which is consistent with the t-test comparing total cholesterol by biological sex in part A i).
+
+```{r}
+df |> ggplot(aes(age, tc, color = factor(gender))) + geom_point() +
+  geom_line(mapping = aes(y = predict(fit_2b))) +
+  labs(title = "Total cholesterol vs age with biological sex as a confounder",
+       x = "Age (years)", y = "Total cholesterol (mmol/L)",
+       color = "Biological\nsex")
+```
+
+## Part D
+
+### i)
+
+The model equation is $Y_i=\beta_0+\beta_1 X_{1i}+\beta_2 X_{2i}+\beta_3 X_{3i}+\beta_4 X_{1i*3i}+\beta_5 X_{2i*3i}+e_i$, where:
+
+- $i=1,\dots,527$
+- $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L
+- $X_{1i}$ is the age of the $i$-th subject in years
+- $X_{2i}$ is the squared age of the $i$-th subject in squared years
+- $X_{3i}$ is the biological sex of the $i$-th subject
+- $X_{1i*3i}$ is the interaction term between age and biological sex
+- $X_{2i*3i}$ is the interaction term between squared age and biological sex
+- When the subject is male or $X_{3i}=0$:
+    - $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years
+    - $\beta_1$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant
+    - $\beta_2$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant
+- When the subject is female or $X_{3i}=1$:
+    - $\beta_0+\beta_3$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years
+    - $\beta_1+\beta_4$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant
+    - $\beta_2+\beta_5$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant
+- $e_i$ is the random error with $E(e_i)=0$, $\text{Var}(e_i)=\sigma^2$, $\text{Cor}(e_i,e_j)=0$, and $e_i\sim N(0,\sigma^2)$.
+
+Biological sex does appear to be an effect modifier of the effect of linear and quadratic age on total cholesterol, since the interaction terms Age$*$Gender and Age$^2*$Gender are statistically significant at the $\alpha=0.05$ level.
+
+```{r}
+fit_2d <- lm(tc ~ age + I(age^2) + gender + age:gender + I(age^2):gender, data = df)
+summary(fit_2d)
+```
+
+### ii)
+
+For biological sex $=$ male, the fitted model equation is $\hat Y_i=2.788+0.114X_i-0.001X_i^2$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $X_i^2$ is the squared age of the $i$-th subject in squared years. For biological sex $=$ female, the fitted model equation is $\hat Y_i=3.863-0.039X_i+(1.72\cdot 10^{-5})X_i^2$ for $i$, $\hat Y_i$, $X_i$, and $X_i^2$ defined similarly.
+
+### iii)
+
+I notice that the lines of the fitted values are not parallel, which further suggests that biological sex is an effect modifier of the effect of linear and quadratic age on total cholesterol. Furthermore, the plot shows that after around 50 years of age, female subjects have more total cholesterol over time on average compared to male subjects.
+
+```{r}
+df |> ggplot(aes(age, tc, color = factor(gender))) + geom_point() +
+  geom_line(mapping = aes(y = predict(fit_2d))) +
+  labs(title = "Total cholesterol vs age with biological sex as an effect modifier",
+       x = "Age (years)", y = "Total cholesterol (mmol/L)",
+       color = "Biological\nsex")
+```
+
+## Part E
+
+The best model in terms of $R^2$, $R_{adj}^2$, and RMSE is the model with age, squared age, sex, and interaction terms as the covariates. This model has the highest $R^2$ (0.1836); while this could be because $R^2$ is non-decreasing as more covariates are added, the model also has the highest adjusted $R^2$ (0.1757), which has a penalty for any additional covariates. Finally, this model has the lowest RMSE (0.953), indicating that it has the lowest estimated standard deviation.
+
+## Part F
+
+### i)
+
+For males, the fitted model equation is $\hat Y_i=2.788+0.114X_i-0.001X_i^2$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, $X_i$ is the age of the $i$-th subject in years, and $X_i^2$ is the squared age of the $i$-th subject in squared years. For females, the fitted model equation is $\hat Y_i=3.863-0.039X_i+(1.72\cdot 10^{-5})X_i^2$ for $i$, $\hat Y_i$, $X_i$, and $X_i^2$ defined similarly.
+
+```{r}
+fit_2f1 <- lm(tc ~ age + I(age^2), data = df[df$gender == 0,])
+fit_2f2 <- lm(tc ~ age + I(age^2), data = df[df$gender == 1,])
+summary(fit_2f1)
+summary(fit_2f2)
+```
+
+### ii)
+
+The scatterplot of total cholesterol vs age with the fitted values is shown below.
+
+```{r}
+predictions <- rep(0, nrow(df))
+predictions[which(df$gender == 0)] <- predict(fit_2f1)
+predictions[which(df$gender == 1)] <- predict(fit_2f2)
+df$predictions <- predictions
+
+df |> ggplot(aes(age, tc, color = factor(gender))) + geom_point() +
+  geom_line(mapping = aes(y = predictions, color = factor(gender))) +
+  labs(title = "Total cholesterol vs age with biological sex as an effect modifier",
+       x = "Age (years)", y = "Total cholesterol (mmol/L)",
+       color = "Biological\nsex")
+```
+
+### iii)
+
+Both approaches yield the same fitted coefficients and scatterplots. In the first approach in part D, all the coefficients are contained in one model output, meaning the fitted values for either biological sex can be computed by looking at just that output. In the second approach in part F, the coefficients are contained in two separate model outputs, meaning the fitted values for biological sex $=$ female must be computed by looking at both outputs.
+
+Another difference is that the model metrics (e.g., $R^2$, $R_{adj}^2$, F-statistic and its p-value) are calculated separately for each biological sex in the second approach but together in the first approach. In short, an advantage of the first approach is that it is compact and shows all coefficients in one model output, but with the disadvantage of losing information about the model metrics for each biological sex.
+
+# Question 3
+
+## Part A
+
+### i)
+
+For the model with continuous BMI, the regression model equation is $Y_i=\beta_0+\beta_1 X_i+e_i$, where:
+
+- $i=1,\dots,527$
+- $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L
+- $X_i$ is the BMI of the $i$-th subject in kg/m$^2$
+- $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X$ is 0 kg/m$^2$
+- $\beta_1$ is the expected change in $Y$ for a 1 kg/m$^2$ increase in $X$
+- $e_i$ is the random error with $E(e_i)=0$, $\text{Var}(e_i)=\sigma^2$, $\text{Cor}(e_i,e_j)=0$, and $e_i\sim N(0,\sigma^2)$.
+
+For the model with categorical BMI, the regression model equation is $Y_i=\beta_0+\beta_1 I_{1i}+\beta_2 I_{2i}+\beta_3 I_{3i}+e_i$, where:
+
+- $i$, $Y_i$, and $e_i$ are defined in the same way as above
+- $j=1,2,3$ for the BMI categories of underweight, overweight, and obese respectively
+- $I_{ji}=1$ if the $i$-th subject has the BMI category $j$ and 0 otherwise
+- $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when the subject has the BMI category of normal weight
+- $\beta_j$ is the coefficient corresponding to the average change in total cholesterol in mmol/L if the subject has the BMI category $j$ vs if the subject has the BMI category of normal weight, holding all other covariates constant.
+
+The categorical BMI model has more coefficients than the other model. Moreover, there are only three possible changes in the total cholesterol for the categorical BMI model, whereas for the other model, there are infinitely many possible changes in the total cholesterol for a 1 kg/m$^2$ increase in the BMI. Note that the indicator variables do not overlap.
+
+### ii)
+
+The categorical BMI model is the same as a one-way ANOVA model since both make comparisons between different groups of a variable.
+
+### iii)
+
+For the continuous BMI model, the fitted model equation is $\hat Y_i=4.110+0.058X_i$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, and $X_i$ is the BMI of the $i$-th subject in kg/m$^2$. For the categorical BMI model, the fitted model equation is $\hat Y_i=5.450-0.454I_{1i}+ 0.193I_{2i}+0.592I_{3i}$ where $i$ and $\hat Y_i$ is defined as previously, $I_{1i}=1$ if the $i$-th subject is underweight, $I_{2i}=1$ if the $i$-th subject is overweight, and $I_{3i}=1$ if the $i$-th subject is obese.
+
+The outputs of the models are shown below.
+
+```{r}
+df$bmi_cts <- df$weight / (df$height / 100)^2
+df$bmi_cat <- cut(df$bmi_cts, breaks = c(-Inf, 18.5, 25.0, 30.0, Inf), labels = c("Underweight", "Normal weight", "Overweight", "Obese"), right = F)
+df$bmi_cat <- relevel(df$bmi_cat, ref = "Normal weight")
+fit_3a1 <- lm(tc ~ bmi_cts, data = df)
+fit_3a2 <- lm(tc ~ bmi_cat, data = df)
+summary(fit_3a1)
+summary(fit_3a2)
+```
+
+### iv)
+
+The scatterplots of total cholesterol vs continuous BMI with the fitted values are shown below.
+
+```{r}
+df |> ggplot(aes(bmi_cts, tc)) + geom_point() +
+  geom_line(mapping = aes(y = predict(fit_3a1)), color = "blue") +
+  labs(title = "Total cholesterol vs continuous BMI",
+       x = "BMI (kg/m^2)", y = "Total cholesterol (mmol/L)")
+df |> ggplot(aes(bmi_cts, tc)) + geom_point() +
+  geom_line(mapping = aes(y = predict(fit_3a2)), color = "blue") +
+  labs(title = "Total cholesterol vs categorical BMI",
+       x = "BMI category", y = "Total cholesterol (mmol/L)")
+```
+
+### v)
+
+I prefer the continuous BMI model. Although both models have statistically significant fitted coefficients, the continuous BMI model fits the data better with $R_{adj}^2=0.0569$ compared to $0.0467$ for the other model; this is also reflected by the model's p-value for the F-statistic and the residual standard error. Moreover, converting a continuous variable to a categorical one could cause some information about the data distribution to be lost.
+
+## Part B
+
+Including a quadratic BMI term marginally improves the continuous BMI model, since in the new model the $R_{adj}^2$ is higher and the p-value associated with the F-statistic is lower, but the fitted intercept is no longer statistically significant.
+
+```{r}
+fit_3b <- lm(tc ~ bmi_cts + I(bmi_cts^2), data = df)
+summary(fit_3b)
+# cat("Adjusted R^2 with and without a quadratic BMI term:", summary(fit_3b)$r.squared, summary(fit_3a2)$r.squared)
+```
+
+## Part C
+
+### i)
+
+The best model is $Y_i=\beta_0+\beta_1 X_{1i}+\beta_2 X_{2i}+\beta_3 X_{3i}+\beta_4 X_{1i*3i}+\beta_5 X_{2i*3i}+\beta_6 X_{6i}+\beta_7 X_{7i}+e_i$, where:
+
+- $i$, $Y_i$, $X_{1i}$, $X_{2i}$, $X_{3i}$, $X_{1i*3i}$, $X_{2i*3i}$, $\beta_0$ to $\beta_5$, and $e_i$ are defined in the same way as in question 2 part D i).
+- $X_{6i}$ is the BMI of the $i$-th subject in kg/m$^2$
+- $X_{7i}$ is the squared BMI of the $i$-th subject in kg$^2$/m$^4$
+- $\beta_6$ is the expected change in $Y$ for a 1 kg/m$^2$ increase in $X_6$, holding all other covariates constant
+- $\beta_7$ is the expected change in $Y$ for a 1 kg$^2$/m$^4$ increase in $X_7$, holding all other covariates constant.
+
+### ii)
+
+I fitted three candidate models based on the model with biological sex as an effect modifier from question 2 part D. The candidate models are as follows:
+
+- Model 1: age, squared age, biological sex, age$*$biological sex, squared age$*$biological sex, continuous BMI
+- Model 2: age, squared age, biological sex, age$*$biological sex, squared age$*$biological sex, categorical BMI
+- Model 3: age, squared age, biological sex, age$*$biological sex, squared age$*$biological sex, continuous BMI, squared BMI.
+
+I selected the best model by finding the model that satisfies the most of the following criteria: having the highest $R_{adj}^2$, the most significant F-statistic, the lowest RMSE, and the lowest AIC. The model with continuous BMI and squared BMI as covariates satisfied all four criteria, and I subsequently determined it to be the best model.
+
+```{r}
+fit_3c1 <- lm(tc ~ age + I(age^2) + gender + age:gender + I(age^2):gender + bmi_cts, data = df)
+fit_3c2 <- lm(tc ~ age + I(age^2) + gender + age:gender + I(age^2):gender + bmi_cat, data = df)
+fit_3c3 <- lm(tc ~ age + I(age^2) + gender + age:gender + I(age^2):gender + bmi_cts + I(bmi_cts^2), data = df)
+cat("Adjusted R^2 for models 1, 2, and 3 respectively:", summary(fit_3c1)$adj.r.squared, summary(fit_3c2)$adj.r.squared, summary(fit_3c3)$adj.r.squared, "\n")
+cat("F-statistic p-value for models 1, 2, and 3 respectively:", "<2.2e-16", "<2.2e-16", "<2.2e-16", "\n")
+cat("RMSE for models 1, 2, and 3 respectively:", 0.9480, 0.9481, 0.9449, "\n")
+cat("AIC value for models 1, 2, and 3 respectively:", AIC(fit_3c1), AIC(fit_3c2), AIC(fit_3c3))
+```
+
+### iii)
+
+$R_{adj}^2$ does improve by adding the effects of BMI; it is equal to 0.1757 without them and 0.1896 with them.
+
+```{r}
+cat("Adjusted R^2 for the model without and with the effects of BMI respectively:", summary(fit_2d)$adj.r.squared, summary(fit_3c3)$adj.r.squared)
+```
+
+### iv)
+
+The residuals do look approximately normally distributed, although their distribution is slightly right skewed and there are two outliers with residuals $>4$.
+
+```{r}
+hist(residuals(fit_3c3), main = "Histogram of residuals", xlab = "Residuals")
+```
+
+### v)
+
+The scatterplot does not show any evidence of heteroscedasticity or other model violations, although there does appear to be a slight clustering when the fitted value is around 5.8.
+
+```{r}
+plot(fitted(fit_3c3), residuals(fit_3c3), main = "Residuals vs fitted values", xlab = "Fitted values", ylab = "Residuals"); abline(a = 0, b = 0)
+```
+
+## Part D
+
+### i)
+
+Yes, there are points that have high leverage, as determined by the threshold on the diagonal elements on the hat matrix, and there are points that have high influence, as determined by the thresholds on the Cooks distance, DFFITS, and DFBETA of each point. In fact, there are 7 points which have high leverage and high influence according to all of these criteria.
+
+```{r}
+pts <- Reduce(intersect, list(
+  which(hatvalues(fit_3c3) > 16 / nrow(df)),
+  which(cooks.distance(fit_3c3) > 4 / (nrow(df) - 2)),
+  which(abs(dffits(fit_3c3)) > 2*sqrt(8 / nrow(df))),
+  which(abs(dfbeta(fit_3c3)) > 2 / sqrt(nrow(df)))
+))
+
+cat("Indices of points with high influence and leverage, according to the hat matrix, Cooks distance, DFITS, and DFBETA:", pts)
+```
+
+### ii)
+
+The 7 points found in the previous part are dropped, which does not change the model appreciably since the $R_{adj}^2$ is 0.1916 vs 0.1896 before and the RMSE is 0.9293 vs 0.9449 before. However, the AIC of the new model has a noticeable decrease from 1446 to 1409, suggesting that the fit of the model does improve without the points.
+
+```{r}
+fit_3d <- lm(tc ~ age + I(age^2) + gender + age:gender + I(age^2):gender + bmi_cts + I(bmi_cts^2), data = df[-pts,])
+summary(fit_3d)
+AIC(fit_3d)
+```
+
+# Appendix
+
+```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
+```
