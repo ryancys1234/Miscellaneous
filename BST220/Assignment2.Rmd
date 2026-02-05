@@ -107,7 +107,7 @@ The total cholesterol value is 5.84 mmol/L or 225.8 mg/dL for a 30 year old male
 
 ## Part B
 
-The R language provides functions for both standardized and studentized residuals; specific details can be found at https://stat.ethz.ch/R-manual/R-devel/library/stats/html/influence.measures.html. The function `rstandard()` uses the formula $z_i=\dfrac{e_i}{\sqrt{SSE/(n-(p+1)) to re-normalize the residuals to have unit variance. The function `rstudent()` calculates externally studentized residuals using the formula $r_{(i)}=\dfrac{e_i}{\sqrt{MSE_{(i)}(1-h_{ii}), or what the documentation calls a "leave-one-out measure of the error variance".
+The R language provides functions for both standardized and studentized residuals; specific details can be found at https://stat.ethz.ch/R-manual/R-devel/library/stats/html/influence.measures.html. The function `rstandard()` uses the formula $z_i=\dfrac{e_i}{\sqrt{SSE/(n-(p+1))}}$ to re-normalize the residuals to have unit variance. The function `rstudent()` calculates externally studentized residuals using the formula $r_{(i)}=\dfrac{e_i}{\sqrt{MSE_{(i)}(1-h_{ii})}}$, or what the documentation calls a "leave-one-out measure of the error variance".
 
 ## Part C
 
@@ -199,7 +199,6 @@ These data points exhibit high outlying-ness due to their high total cholesterol
 ```{r}
 hv <- hatvalues(fit_2a)
 cat("Hat values for the outliers:", hv[rownames(tbl_2f2) |> as.integer()], "\n")
-cat("Threshold for high leverage:", 2*5/527)
 ```
 
 # Question 3
@@ -248,7 +247,7 @@ These data points stick out as having high leverage because observations 163 and
 
 ### v)
 
-Leverage is driven by values of a covariate(s). This is because the hat matrix is calculated without using the outcomes.
+Leverage is driven by values of a covariate or covariates. This is because the hat matrix is calculated without using the outcomes.
 
 # Question 4
 
@@ -309,7 +308,7 @@ I choose DFFITS as the measure of influence.
 
 ### ii)
 
-The threshold $|\text{DFFITS}_i|>2\sqrt{\frac{p+1}{n}}=2\sqrt{\frac{5}{527 is chosen for $i=1,\dots,527$.
+The threshold $|\text{DFFITS}_i|>2\sqrt{\frac{p+1}{n}}=2\sqrt{\frac{5}{527}}$ is chosen for $i=1,\dots,527$.
 
 ```{r}
 ind <- abs(dffits(fit_2a)) > 2*sqrt(5/527)
@@ -348,4 +347,3 @@ summary(lm(tc ~ age + I(age^2) + as.factor(gender) + bmi_cts, data = new_df))
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
-

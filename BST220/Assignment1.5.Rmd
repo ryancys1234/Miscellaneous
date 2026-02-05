@@ -10,25 +10,27 @@ library(ggplot2); theme_set(theme_minimal())
 df <- read.csv("dataset1.csv")
 ```
 
+\newcommand{\E}{\mathbb{E}}
+
 # Question 1
 
 ## Part A
 
 ### i)
 
-The regression model equation is $Y_i=\beta_0+\beta_1 X_i+e_i$, where:
+The regression model equation is $Y_i=\beta_0+\beta_1X_i+e_i$, where:
 
 - $i=1,\dots,527$
 - $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L
 - $X_i$ is the age of the $i$-th subject in years
 - $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X$ is 0 years
 - $\beta_1$ is the slope or expected change in $Y$ for a 1 year increase in $X$
-- $e_i$ is the random error with $E(e_i)=0$, $\text{Var}(e_i)=\sigma^2$, $\text{Cor}(e_i,e_j)=0$, and $e_i\sim N(0,\sigma^2)$
-- $E(Y|X)$ is the expected value of $Y$ for a given $X$.
+- $e_i$ is the random error with $\E(e_i)=0$, $\text{Var}(e_i)=\sigma^2$, $\text{Cor}(e_i,e_j)=0$, and $e_i\sim N(0,\sigma^2)$
+- $\E(Y|X)$ is the expected value of $Y$ for a given $X$.
 
 ### ii)
 
-According to this data, a 10 year increase in the subject's age is associated with a 0.262 mmol/L increase in their total cholesterol on average, with a 95% confidence interval of [0.204, 0.321] and a p-value $<2\cdot 10^{-16}$.
+According to this data, a 10 year increase in the subject's age is associated with a 0.262 mmol/L increase in their total cholesterol on average, with a 95% confidence interval of $[0.204,0.321]$ and a p-value of $<2\cdot 10^{-16}$.
 
 ```{r}
 fit_1a <- lm(tc ~ age, data = df)
@@ -46,17 +48,17 @@ cat("Pearson coefficient:", cor(df$age, df$tc, method = "pearson"))
 
 ### iv)
 
-The simple linear regression model has a very significant p-value for the association between age and total cholesterol, which suggests that we can be confident there is a relationship between the variables. Similarly, the Pearson correlation coefficient indicates a positive correlation between the variables; however, it is somewhat low, suggesting that the strength of the linear relationship is not particularly strong. This indicates that outliers could be present or that simple linear regression might be insufficient for modeling the relationship between the variables.
+The simple linear regression model has a very significant p-value for the association between age and total cholesterol, suggesting that we can be confident there is a relationship between the variables. Similarly, the Pearson correlation coefficient indicates a positive correlation between the variables; however, it is somewhat low, suggesting that the strength of the linear relationship is not particularly strong. This indicates that outliers could be present or that simple linear regression might be insufficient for modeling the relationship between the variables.
 
 ## Part B
 
 ### ii)
 
-In the scatterplot of the residuals vs fitted values, there does not seem to be any pattern in the residuals, which appear homoscedastic. In the histogram, the residuals appear to be mostly normally distributed with a slight right skew. In the QQ plot, the residuals also look normally distributed since they mostly follow the diagonal straight line with a slight deviation on the right.
+In the scatterplot of the residuals vs fitted values, there does not seem to be any pattern in the residuals, which appear homoscedastic. In the histogram, the residuals appear to be mostly normally distributed with a slight right skew. In the QQ plot, the residuals also look normally distributed since they mostly follow the diagonal straight line with a slight deviation on the right side of the plot.
 
 ### iii)
 
-In the histogram, there appears to be two outliers with residuals $>4$. This can also be seen in the scatterplot and the QQ plot, the latter of which shows the outliers as the two rightmost points.
+In the histogram, there appears to be two outliers with residuals greater than 4. This can also be seen in the scatterplot and the QQ plot, the latter of which shows the outliers as the two rightmost points.
 
 ```{r}
 plot(fitted(fit_1a), residuals(fit_1a), main = "Residuals vs fitted values", xlab = "Fitted values", ylab = "Residuals"); abline(a = 0, b = 0)
@@ -85,7 +87,7 @@ The fitted model equation is $\hat Y_i = 3.066+0.092X_i-0.0007X_i^2$, where $i=1
 
 ### iv)
 
-Yes, I do see statistical evidence of a nonlinear relationship between age and total cholesterol according to this data. This is since the p-value for the coefficient of Age$_i^2$ is $0.0004<0.001$, which is statistically significant. This is consistent with the scatterplot of total cholesterol vs age, in which the Lowess curve is not a straight line.
+Yes, I do see statistical evidence of a nonlinear relationship between age and total cholesterol according to this data. This is since the p-value for the coefficient of Age$_i^2$ is $0.0004<0.001$, which is statistically significant. This is consistent with the scatterplot of total cholesterol vs age, where the LOWESS curve is not a straight line.
 
 # Question 2
 
@@ -93,7 +95,7 @@ Yes, I do see statistical evidence of a nonlinear relationship between age and t
 
 ### i)
 
-The null hypothesis or $H_0$ is $\mu_1=\mu_2$ and the alternative hypothesis r $H_1$ is $\mu_1\neq\mu_2$, where $\mu_1$ is the mean total cholesterol of the female subjects and $\mu_2$ is the mean total cholesterol of the male subjects. The t-test yields a p-value of $0.523$, which is not significant. Thus, there is insufficient evidence to conclude that the mean total cholesterol is statistically different between sexes.
+The null hypothesis (or $H_0$) is $\mu_1=\mu_2$ and the alternative hypothesis (or $H_1$) is $\mu_1\neq\mu_2$, where $\mu_1$ is the mean total cholesterol of the female subjects and $\mu_2$ is the mean total cholesterol of the male subjects. The t-test yields a p-value of $0.523$, which is not significant. Thus, there is insufficient evidence to conclude that the mean total cholesterol is statistically different between sexes.
 
 ```{r}
 t.test(df$tc ~ df$gender, var.equal = T)
@@ -104,8 +106,8 @@ t.test(df$tc ~ df$gender, var.equal = T)
 The results for linear model and the equal variance t-test have the following in common:
 
 - In the t-test results, the difference in the mean total cholesterol between the biological sexes is 0.0587, which is the same as the estimated slope for biological sex in the linear model.
-- The absolute value of the t statistic is 0.639 for both the t-test and the estimated slope for biological sex in the linear model. In addition, the degrees of freedom and p value corresponding to this t statistic are 525 and 0.523 respectively for both the t-test and the linear model.
-- In the t-test results, the 95% confidence interval is [-0.239, 0.122], which is the same, but with opposite signs, as the 95% confidence interval for the estimated slope for biological sex in the linear model.
+- The absolute value of the t-statistic is 0.639 for both the t-test and the estimated slope for biological sex in the linear model. In addition, the degrees of freedom and p-value corresponding to this t statistic are 525 and 0.523 respectively for both the t-test and the linear model.
+- In the t-test results, the 95% confidence interval is $[-0.239,0.122]$, which is the same (but with opposite signs) as the 95% confidence interval for the estimated slope for biological sex in the linear model.
 
 ```{r}
 fit_2a <- lm(tc ~ gender, data = df)
@@ -162,7 +164,7 @@ df |> ggplot(aes(age, tc, color = factor(gender))) + geom_point() +
 
 ### i)
 
-The model equation is $Y_i=\beta_0+\beta_1 X_{1i}+\beta_2 X_{2i}+\beta_3 X_{3i}+\beta_4 X_{1i*3i}+\beta_5 X_{2i*3i}+e_i$, where:
+The model equation is $Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\beta_3X_{3i}+\beta_4X_{1i*3i}+\beta_5X_{2i*3i}+e_i$, where:
 
 - $i=1,\dots,527$
 - $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L
@@ -171,15 +173,15 @@ The model equation is $Y_i=\beta_0+\beta_1 X_{1i}+\beta_2 X_{2i}+\beta_3 X_{3i}+
 - $X_{3i}$ is the biological sex of the $i$-th subject
 - $X_{1i*3i}$ is the interaction term between age and biological sex
 - $X_{2i*3i}$ is the interaction term between squared age and biological sex
-- When the subject is male or $X_{3i}=0$:
+- When the subject is male ($X_{3i}=0$):
     - $\beta_0$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years
     - $\beta_1$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant
     - $\beta_2$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant
-- When the subject is female or $X_{3i}=1$:
+- When the subject is female ($X_{3i}=1$):
     - $\beta_0+\beta_3$ is the intercept corresponding to the average of $Y$ in mmol/L when $X_1$ is 0 years
     - $\beta_1+\beta_4$ is the expected change in $Y$ for a 1 year increase in $X_1$, holding all other covariates constant
     - $\beta_2+\beta_5$ is the expected change in $Y$ for a 1 squared year increase in $X_2$, holding all other covariates constant
-- $e_i$ is the random error with $E(e_i)=0$, $\text{Var}(e_i)=\sigma^2$, $\text{Cor}(e_i,e_j)=0$, and $e_i\sim N(0,\sigma^2)$.
+- $e_i$ is the random error with $\E(e_i)=0$, $\text{Var}(e_i)=\sigma^2$, $\text{Cor}(e_i,e_j)=0$, and $e_i\sim N(0,\sigma^2)$.
 
 Biological sex does appear to be an effect modifier of the effect of linear and quadratic age on total cholesterol, since the interaction terms Age$*$Gender and Age$^2*$Gender are statistically significant at the $\alpha=0.05$ level.
 
@@ -223,8 +225,6 @@ summary(fit_2f2)
 
 ### ii)
 
-The scatterplot of total cholesterol vs age with the fitted values is shown below.
-
 ```{r}
 predictions <- rep(0, nrow(df))
 predictions[which(df$gender == 0)] <- predict(fit_2f1)
@@ -250,7 +250,7 @@ Another difference is that the model metrics (e.g., $R^2$, $R_{adj}^2$, F-statis
 
 ### i)
 
-For the model with continuous BMI, the regression model equation is $Y_i=\beta_0+\beta_1 X_i+e_i$, where:
+For the model with continuous BMI, the regression model equation is $Y_i=\beta_0+\beta_1X_i+e_i$, where:
 
 - $i=1,\dots,527$
 - $Y_i$ is the total cholesterol of the $i$-th subject in mmol/L
@@ -277,8 +277,6 @@ The categorical BMI model is the same as a one-way ANOVA model since both make c
 
 For the continuous BMI model, the fitted model equation is $\hat Y_i=4.110+0.058X_i$, where $i=1,\dots,527$, $\hat Y_i$ is the estimated total cholesterol of the $i$-th subject in mmol/L, and $X_i$ is the BMI of the $i$-th subject in kg/m$^2$. For the categorical BMI model, the fitted model equation is $\hat Y_i=5.450-0.454I_{1i}+ 0.193I_{2i}+0.592I_{3i}$ where $i$ and $\hat Y_i$ is defined as previously, $I_{1i}=1$ if the $i$-th subject is underweight, $I_{2i}=1$ if the $i$-th subject is overweight, and $I_{3i}=1$ if the $i$-th subject is obese.
 
-The outputs of the models are shown below.
-
 ```{r}
 df$bmi_cts <- df$weight / (df$height / 100)^2
 df$bmi_cat <- cut(df$bmi_cts, breaks = c(-Inf, 18.5, 25.0, 30.0, Inf), labels = c("Underweight", "Normal weight", "Overweight", "Obese"), right = F)
@@ -290,8 +288,6 @@ summary(fit_3a2)
 ```
 
 ### iv)
-
-The scatterplots of total cholesterol vs continuous BMI with the fitted values are shown below.
 
 ```{r}
 df |> ggplot(aes(bmi_cts, tc)) + geom_point() +
@@ -322,7 +318,7 @@ summary(fit_3b)
 
 ### i)
 
-The best model is $Y_i=\beta_0+\beta_1 X_{1i}+\beta_2 X_{2i}+\beta_3 X_{3i}+\beta_4 X_{1i*3i}+\beta_5 X_{2i*3i}+\beta_6 X_{6i}+\beta_7 X_{7i}+e_i$, where:
+The best model is $Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\beta_3X_{3i}+\beta_4X_{1i*3i}+\beta_5X_{2i*3i}+\beta_6X_{6i}+\beta_7X_{7i}+e_i$, where:
 
 - $i$, $Y_i$, $X_{1i}$, $X_{2i}$, $X_{3i}$, $X_{1i*3i}$, $X_{2i*3i}$, $\beta_0$ to $\beta_5$, and $e_i$ are defined in the same way as in question 2 part D i).
 - $X_{6i}$ is the BMI of the $i$-th subject in kg/m$^2$
@@ -360,7 +356,7 @@ cat("Adjusted R^2 for the model without and with the effects of BMI respectively
 
 ### iv)
 
-The residuals do look approximately normally distributed, although their distribution is slightly right skewed and there are two outliers with residuals $>4$.
+The residuals do look approximately normally distributed, although their distribution is slightly right skewed and there are two outliers with residuals greater than 4.
 
 ```{r}
 hist(residuals(fit_3c3), main = "Histogram of residuals", xlab = "Residuals")
@@ -387,8 +383,7 @@ pts <- Reduce(intersect, list(
   which(abs(dffits(fit_3c3)) > 2*sqrt(8 / nrow(df))),
   which(abs(dfbeta(fit_3c3)) > 2 / sqrt(nrow(df)))
 ))
-
-cat("Indices of points with high influence and leverage, according to the hat matrix, Cooks distance, DFITS, and DFBETA:", pts)
+pts
 ```
 
 ### ii)
@@ -405,4 +400,3 @@ AIC(fit_3d)
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
-

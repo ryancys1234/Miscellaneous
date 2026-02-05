@@ -246,4 +246,3 @@ The log transformation is perhaps the most common.
 
 ```{r ref.label = setdiff(knitr::all_labels(), "setup"), echo = T, eval = F}
 ```
-
